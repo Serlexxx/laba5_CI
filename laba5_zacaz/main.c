@@ -1,0 +1,330 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <malloc.h>
+#include <stdlib.h>
+#include <time.h> 
+#include "processing.h"
+
+int main() {
+	system("chcp 1251"); //для вывода кириллицы
+	int** Matrx = NULL;
+	int cols = 0;
+	int rows = 0;
+	int BigExit = 1; //значение для вечного цикла работы в котором будет появлять меню и выбор действия
+	while (BigExit) {
+		printf("Что желаете сделать?\n");
+		printf("1.Ввод данных\n2.Вывод данных\n3.Обработка данных\n0.Выход\n");
+		int bigswitch;
+		scanf("%d", &bigswitch);
+		switch (bigswitch)
+		{
+		case 1:
+		{
+			int miniExit = 1;
+
+			while (miniExit) {
+
+				printf("Ввод откуда?\n");
+				printf("1.С клавиатуры\n2.Из файла\n3.Случайные данные\n0.Назад\n");
+				int miniswitch;
+				scanf("%d", &miniswitch);
+				switch (miniswitch)
+				{
+				case 1:
+				{
+					if (Matrx == NULL) {
+						int exit = 1;
+						while (exit) {
+							printf("Сколько будет строк?\nВведите число большее 0\n");
+							scanf("%d", &rows);
+							if (rows <= 0) {
+								printf("Попробуйте снова!\n");
+							}
+							else {
+								exit = 0;
+							}
+						}
+						exit = 1;
+						while (exit) {
+							printf("Сколько будет столбцов?\nВведите число большее 0\n");
+							scanf("%d", &cols);
+							if (cols <= 0) {
+								printf("Попробуйте снова!\n");
+							}
+							else {
+								exit = 0;
+							}
+						}
+						Matrx = initializationMatrx(rows, cols);
+						printf("Вводите числа\n");
+						for (int i = 0; i < rows; i++) {
+							for (int j = 0; j < cols; j++) {
+								scanf("%d", &Matrx[i][j]);
+							}
+						}
+						printMatrx(Matrx, rows, cols);
+					}
+					else {
+						printf("Матрица уже существует!\n");
+					}
+					break;
+				}
+				case 2:
+				{
+					if (Matrx == NULL) {
+						FILE* in;
+						if ((in = fopen("test.bin", "r")) != NULL)
+						{
+							fread(&rows, sizeof(int), 1, in);
+							fread(&cols, sizeof(int), 1, in);
+							Matrx = initializationMatrx(rows, cols);
+							for (int i = 0; i < rows; i++) {
+									fread(Matrx[i], sizeof(int), cols, in);
+								
+							}
+							fclose(in);
+						}
+						else printf("\nОшибка открытия файла для записи!\n");
+						printMatrx(Matrx, rows, cols);
+						
+					}
+					else {
+						printf("Матрица уже существует!\n");
+					}
+					break;
+				}
+				case 3:
+				{
+					if (Matrx == NULL) {
+						srand(time(NULL));
+						cols = (rand() % 10) + 1;
+						rows = (rand() % 10) + 1;
+						int exit = 1;
+						Matrx = initializationMatrx(rows, cols);
+						for (int i = 0; i < rows; i++) {
+							for (int j = 0; j < cols; j++) {
+								Matrx[i][j] = -100 + (rand() % 200);
+							}
+						}
+						printMatrx(Matrx, rows, cols);
+					}
+					else {
+						printf("Матрица уже существует!\n");
+					}
+					break;
+				}
+				case 0:
+				{
+					miniExit = 0;
+					system("cls"); //очистка консоли
+					break;
+				}
+				default:
+					printf("Попробуйте снова!\n"); //если ввели число отличное от выбора меню
+					break;
+				}
+			}
+			break;
+		}
+		case 2:
+		{
+			if (Matrx != NULL) {
+
+				int miniexit = 1;
+
+				while (miniexit) {
+					printf("1.Ввывод в консоль\n2.Вывод в файл\n0.Назад\n");
+					int miniswitch;
+					scanf("%d", &miniswitch);
+					switch (miniswitch)
+					{
+					case 1:
+					{
+						printMatrx(Matrx, rows, cols);
+						break;
+					}
+					case 2:
+					{
+						Save(Matrx, rows, cols);
+						break;
+					}
+					case 0:
+					{
+						miniexit = 0;
+						system("cls");
+						break;
+					}
+					default:
+						printf("Попробуйте снова!\n");
+						break;
+					}
+				}
+			}
+			else {
+				printf("Выводить нечего!\n");
+			}
+			break;
+		}
+		case 3:
+		{
+			if (Matrx != NULL) {
+				printMatrx(Matrx, rows, cols);
+				int miniexit = 1;
+
+				while (miniexit) {
+					printf("1.Вставить строку\n2.Вставить столбец\n3.Удалить строку\n4.Удалить столбец\n5.Сортировка по строк минимальному значению\n0.Назад\n");
+					int miniswitch;
+					scanf("%d", &miniswitch);
+					switch (miniswitch)
+					{
+					case 1:
+					{
+						
+						
+						int ind;
+						int miniminiexit = 1;
+						while (miniminiexit) {
+							printf("Введите индекс строки, куда хотите вставить новую строку(от 0...%d)", rows - 1);
+							scanf("%d", &ind);
+							if (ind < 0 || ind > (rows - 1)) {
+								printf("Попробуйте снова!\n");
+							}
+							else
+							{
+								miniminiexit = 0;
+								
+							}
+						}
+						Matrx = insertRow(Matrx, rows, cols, ind);
+						rows++;
+						printf("Введите новые значения для строки - %d\n", ind);
+						printf("Количество новых значений должно быть = %d\n", cols);
+						for (int j = 0; j < cols; j++) {
+							scanf("%d", &Matrx[ind][j]);
+						}
+						printMatrx(Matrx, rows, cols);
+						break;
+					}
+					case 2:
+					{
+						
+						int ind;
+						int miniminiexit = 1;
+						while (miniminiexit) {
+							printf("Введите индекс столбца, куда хотите вставить новый столбец(от 0...%d)", cols - 1);
+							scanf("%d", &ind);
+							if (ind < 0 || ind >(cols - 1)) {
+								printf("Попробуйте снова!\n");
+							}
+							else
+							{
+								miniminiexit = 0;
+							}
+						}
+						Matrx = insertCol(Matrx, rows, cols, ind);
+						cols++;
+						printf("Введите новые значения для строки - %d\n", ind);
+						printf("Количество новых значений должно быть = %d\n", rows);
+						for (int j = 0; j < rows; j++) {
+							scanf("%d", &Matrx[rows][ind]);
+						}
+						printMatrx(Matrx, rows, cols);
+						break;
+					}
+					case 3:
+					{
+						
+						int ind;
+						int miniminiexit = 1;
+						while (miniminiexit) {
+							printf("Введите индекс строки, которую хотите удалить(от 0...%d)", rows - 1);
+							scanf("%d", &ind);
+							if (ind < 0 || ind >(rows - 1)) {
+								printf("Попробуйте снова!\n");
+							}
+							else
+							{
+								miniminiexit = 0;
+							}
+						}
+						if (rows == 1) {
+							freeMatrx(Matrx, rows);
+							Matrx = NULL;
+							cols = 0;
+							rows = 0;
+							miniexit = 0;
+						}
+						else {
+							Matrx = delteRow(Matrx, rows, cols, ind);
+							rows--;
+							printMatrx(Matrx, rows, cols);
+						}
+					
+						break;
+					}
+					case 4: 
+					{
+						int ind;
+						int miniminiexit = 1;
+						while (miniminiexit) {
+							printf("Введите индекс cтолбца, который хотите удалить(от 0...%d)", cols - 1);
+							scanf("%d", &ind);
+							if (ind < 0 || ind >(cols - 1)) {
+								printf("Попробуйте снова!\n");
+							}
+							else
+							{
+								miniminiexit = 0;
+							}
+						}
+						if (cols == 1) {
+							freeMatrx(Matrx, rows);
+							Matrx = NULL;
+							rows = 0;
+							cols = 0;
+							miniexit = 0;
+						}
+						else {
+							Matrx = delCol(Matrx, rows, cols, ind);
+							cols--;
+							printMatrx(Matrx, rows, cols);
+						}
+						break;
+					}
+					case 5:
+					{
+						SortByMin(Matrx, rows, cols);
+						break;
+					}
+					case 0:
+					{
+						miniexit = 0;
+						system("cls");
+						break;
+					}
+					default:
+						printf("Попробуйте снова!\n");
+						break;
+					}
+				}
+			}
+			else {
+				printf("Обрабатывать нечего!\n");
+			}
+			break;
+		}
+		case 0:
+		{
+			printf("Досвидания!\n");
+			if(Matrx != NULL)
+				freeMatrx(Matrx, rows);
+			BigExit = 0;
+			break;
+		}
+		default:
+			printf("Попробуйте снова!\n"); //если ввели число отличное от выбора меню
+			break;
+		}
+	}
+	return 0;
+}
